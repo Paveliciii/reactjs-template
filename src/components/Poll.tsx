@@ -34,7 +34,6 @@ const questions: Question[] = [
   }
 ];
 
-// Тестовые данные для отладки
 const testUser: TelegramUser = {
   id: 123456789,
   first_name: 'Test',
@@ -46,13 +45,13 @@ export function Poll() {
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string>('');
   const [isTelegram, setIsTelegram] = useState(false);
+  const [answers, setAnswers] = useState<string[]>([]);
 
   useEffect(() => {
-    // Проверяем, запущено ли приложение внутри Telegram
     const launchParams = retrieveLaunchParams();
     const isTelegramApp = !!launchParams.tgWebAppUser;
     setIsTelegram(isTelegramApp);
-    
+
     if (!isTelegramApp) {
       setStatus('Приложение должно быть запущено через Telegram');
     }
@@ -71,7 +70,6 @@ export function Poll() {
       if (isTelegram) {
         tgWebAppUser = launchParams.tgWebAppUser as TelegramUser;
       } else {
-        // Используем тестовые данные для отладки
         tgWebAppUser = testUser;
         setStatus('Тестовый режим: ответ не будет отправлен боту');
       }
@@ -87,9 +85,11 @@ export function Poll() {
         setStatus('Ответ успешно отправлен!');
       }
 
+      setAnswers((prev) => [...prev, `Вопрос ${currentQuestion.id}: ${answer}`]);
+
       if (currentQuestionIndex < questions.length - 1) {
         setTimeout(() => {
-          setCurrentQuestionIndex(prev => prev + 1);
+          setCurrentQuestionIndex((prev) => prev + 1);
           setStatus('');
         }, 1000);
       } else {
@@ -106,21 +106,34 @@ export function Poll() {
 
   return (
     <div style={{ padding: '16px' }}>
-      <h2 style={{ marginBottom: '16px' }}>Вопрос {currentQuestion.id} из {questions.length}</h2>
-      <p style={{ marginBottom: '24px' }}>{currentQuestion.text}</p>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {currentQuestion.options.map((option, index) => (
-          <Button
-            key={index}
-            onClick={() => handleAnswer(option)}
-            disabled={isLoading}
-            style={{ width: '100%' }}
-          >
-            {option}
-          </Button>
-        ))}
-      </div>
+      {currentQuestionIndex < questions.length ? (
+        <>
+          <h2 style={{ marginBottom: '16px' }}>Вопрос {currentQuestion.id} из {questions.length}</h2>
+          <p style={{ marginBottom: '24px' }}>{currentQuestion.text}</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQuestion.options.map((option, index) => (
+              <Button
+                key={index}
+                onClick={() => handleAnswer(option)}
+                disabled={isLoading}
+                style={{ width: '100%' }}
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div>
+          <h2>Результаты опроса</h2>
+          <ul>
+            {answers.map((answer, index) => (
+              <li key={index}>{answer}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {status && (
         <div style={{ 
@@ -136,4 +149,4 @@ export function Poll() {
       )}
     </div>
   );
-} 
+}
