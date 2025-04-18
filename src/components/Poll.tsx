@@ -106,18 +106,6 @@ export function Poll() {
 
   return (
     <div style={{ padding: '16px' }}>
-      {!isTelegram && (
-        <div style={{ 
-          marginBottom: '16px', 
-          padding: '8px', 
-          backgroundColor: '#fff3e0',
-          borderRadius: '4px',
-          textAlign: 'center'
-        }}>
-          Приложение запущено вне Telegram. Работает в тестовом режиме.
-        </div>
-      )}
-      
       <h2 style={{ marginBottom: '16px' }}>Вопрос {currentQuestion.id} из {questions.length}</h2>
       <p style={{ marginBottom: '24px' }}>{currentQuestion.text}</p>
       
@@ -139,7 +127,8 @@ export function Poll() {
           marginTop: '16px', 
           padding: '8px', 
           textAlign: 'center',
-          backgroundColor: status.includes('Ошибка') ? '#ffebee' : '#e8f5e9',
+          backgroundColor: status.includes('Ошибка') ? '#ffebee' : '#2e7d32',
+          color: status.includes('Ошибка') ? '#000000' : '#ffffff',
           borderRadius: '4px'
         }}>
           {status}
