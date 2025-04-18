@@ -74,8 +74,9 @@ export function Poll() {
         setStatus('Тестовый режим: ответ не будет отправлен боту');
       }
 
-      if (!tgWebAppUser || !tgWebAppUser.id) {
+      if (!tgWebAppUser || typeof tgWebAppUser.id === 'undefined') {
         setStatus('Ошибка: не удалось получить данные пользователя');
+        setIsLoading(false);
         return;
       }
 
