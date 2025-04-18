@@ -1,8 +1,9 @@
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import { AppRoot } from '@telegram-apps/telegram-ui';
 
-import { App } from '@/components/App.tsx';
 import { ErrorBoundary } from '@/components/ErrorBoundary.tsx';
 import { publicUrl } from '@/helpers/publicUrl.ts';
+import { Poll } from '@/components/Poll';
 
 function ErrorBoundaryError({ error }: { error: unknown }) {
   return (
@@ -27,7 +28,12 @@ export function Root() {
       <TonConnectUIProvider
         manifestUrl={publicUrl('tonconnect-manifest.json')}
       >
-        <App/>
+        <AppRoot>
+          <div>
+            <h1 style={{ textAlign: 'center', margin: '16px 0' }}>Опросник</h1>
+            <Poll />
+          </div>
+        </AppRoot>
       </TonConnectUIProvider>
     </ErrorBoundary>
   );
