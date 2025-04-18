@@ -36,28 +36,40 @@ const questions: Question[] = [
 
 export function Poll() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<string>('');
 
   const handleAnswer = async (answer: string) => {
+    setStatus('Обработка ответа...');
+    setIsLoading(true);
+
     const currentQuestion = questions[currentQuestionIndex];
 
     try {
       const launchParams = retrieveLaunchParams();
       const tgWebAppUser = launchParams.tgWebAppUser as TelegramUser;
-      const userId = tgWebAppUser?.id;
-      
-      if (!userId) {
-        console.error('User ID not available');
+
+      if (!tgWebAppUser || !tgWebAppUser.id) {
+        setStatus('Ошибка: не удалось получить данные пользователя');
         return;
       }
 
-      await sendMessage(userId, `Вопрос ${currentQuestion.id}: ${answer}`);
-      console.log('Ответ отправлен:', answer);
-    } catch (error) {
-      console.error('Ошибка при отправке ответа:', error);
-    }
+      setStatus('Отправка ответа...');
+      await sendMessage(tgWebAppUser.id, `Вопрос ${currentQuestion.id}: ${answer}`);
+      setStatus('Ответ успешно отправлен!');
 
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      if (currentQuestionIndex < questions.length - 1) {
+        setTimeout(() => {
+          setCurrentQuestionIndex(prev => prev + 1);
+          setStatus('');
+        }, 1000);
+      } else {
+        setStatus('Опрос завершен! Спасибо за участие!');
+      }
+    } catch (error) {
+      setStatus('Ошибка при отправке ответа. Попробуйте еще раз.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,12 +85,25 @@ export function Poll() {
           <Button
             key={index}
             onClick={() => handleAnswer(option)}
+            disabled={isLoading}
             style={{ width: '100%' }}
           >
             {option}
           </Button>
         ))}
       </div>
+
+      {status && (
+        <div style={{ 
+          marginTop: '16px', 
+          padding: '8px', 
+          textAlign: 'center',
+          backgroundColor: status.includes('Ошибка') ? '#ffebee' : '#e8f5e9',
+          borderRadius: '4px'
+        }}>
+          {status}
+        </div>
+      )}
     </div>
   );
 } 
