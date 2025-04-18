@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@telegram-apps/telegram-ui';
 import { sendMessage } from '@/helpers/telegramBot';
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
@@ -34,10 +34,29 @@ const questions: Question[] = [
   }
 ];
 
+// Тестовые данные для отладки
+const testUser: TelegramUser = {
+  id: 123456789,
+  first_name: 'Test',
+  username: 'test_user'
+};
+
 export function Poll() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string>('');
+  const [isTelegram, setIsTelegram] = useState(false);
+
+  useEffect(() => {
+    // Проверяем, запущено ли приложение внутри Telegram
+    const launchParams = retrieveLaunchParams();
+    const isTelegramApp = !!launchParams.tgWebAppUser;
+    setIsTelegram(isTelegramApp);
+    
+    if (!isTelegramApp) {
+      setStatus('Приложение должно быть запущено через Telegram');
+    }
+  }, []);
 
   const handleAnswer = async (answer: string) => {
     setStatus('Обработка ответа...');
@@ -47,16 +66,26 @@ export function Poll() {
 
     try {
       const launchParams = retrieveLaunchParams();
-      const tgWebAppUser = launchParams.tgWebAppUser as TelegramUser;
+      let tgWebAppUser: TelegramUser;
+
+      if (isTelegram) {
+        tgWebAppUser = launchParams.tgWebAppUser as TelegramUser;
+      } else {
+        // Используем тестовые данные для отладки
+        tgWebAppUser = testUser;
+        setStatus('Тестовый режим: ответ не будет отправлен боту');
+      }
 
       if (!tgWebAppUser || !tgWebAppUser.id) {
         setStatus('Ошибка: не удалось получить данные пользователя');
         return;
       }
 
-      setStatus('Отправка ответа...');
-      await sendMessage(tgWebAppUser.id, `Вопрос ${currentQuestion.id}: ${answer}`);
-      setStatus('Ответ успешно отправлен!');
+      if (isTelegram) {
+        setStatus('Отправка ответа...');
+        await sendMessage(tgWebAppUser.id, `Вопрос ${currentQuestion.id}: ${answer}`);
+        setStatus('Ответ успешно отправлен!');
+      }
 
       if (currentQuestionIndex < questions.length - 1) {
         setTimeout(() => {
@@ -77,6 +106,18 @@ export function Poll() {
 
   return (
     <div style={{ padding: '16px' }}>
+      {!isTelegram && (
+        <div style={{ 
+          marginBottom: '16px', 
+          padding: '8px', 
+          backgroundColor: '#fff3e0',
+          borderRadius: '4px',
+          textAlign: 'center'
+        }}>
+          Приложение запущено вне Telegram. Работает в тестовом режиме.
+        </div>
+      )}
+      
       <h2 style={{ marginBottom: '16px' }}>Вопрос {currentQuestion.id} из {questions.length}</h2>
       <p style={{ marginBottom: '24px' }}>{currentQuestion.text}</p>
       
